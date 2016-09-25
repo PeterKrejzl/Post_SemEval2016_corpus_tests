@@ -6,7 +6,8 @@ from sparsesvd import sparsesvd
 from pprint import pprint
 from sklearn import cluster
 from matplotlib import pyplot
-
+from scipy import spatial
+import sys
 
 
 FEATURES = 3000
@@ -122,9 +123,27 @@ def cluster_data (data, clusters, visualize, jobs):
 
 
 
+def compute_cosine_similarity(data):
+    #takes one of the matrices from SVD (Ut)
+    #and tries to compute cosine similarity between each two
+    data_tr = data.transpose()
 
 
-
+    for i in range(data_tr.shape[1]):
+        res = []
+        for j in range(data_tr.shape[1]):
+            if i != j:
+                if (np.any(data_tr[:, i])) & (np.any(data_tr[:,j])):
+                    result = spatial.distance.cosine(data_tr[:,i], data_tr[:,j])
+                    res.append(result)
+                else:
+                    res.append(sys.maxint)
+        print('Source = %s, most similar = %s, sim = %s, position = %s' % \
+              (data_tr[:,i],\
+               data_tr[:, np.argmin(res)],\
+               np.min(res),\
+               np.argmin(res)))
+ 
 
 
 tweets, stances = load_data_from_file(training_data_filename)
@@ -143,7 +162,9 @@ Ut, s, Vt = calculate_SVD(sparse_data_features, FACTORS)
 
 #first cluster data_features
 #clusters various data set to visualize
-
 #_,_,_ = cluster_data(data_features, CLUSTERS, True, JOBS)
 #_,_,_ = cluster_data(Vt, CLUSTERS, True, JOBS)
-_,_,_ = cluster_data(Ut, CLUSTERS, True, JOBS)
+#_,_,_ = cluster_data(Ut, CLUSTERS, True, JOBS)
+
+
+compute_cosine_similarity(Ut)

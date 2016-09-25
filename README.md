@@ -3,3 +3,4 @@ just a couple of scripts mainly for me:
 - SVD
 - TFIDF
 - clustering (K-Means)
+- cosine similarity
