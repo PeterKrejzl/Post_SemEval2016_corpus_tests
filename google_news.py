@@ -72,7 +72,7 @@ with open(training_data_filename, 'r') as input_file:
 
 print(total_words)
 print(vectorized_words)
-
-#print('Total words = %s, vectorized words = %, percentage = %s' % (total_words, vectorized_words, (float(vectorized_words) / float(total_words))))
-
-
+'''
+10543
+6953
+'''
