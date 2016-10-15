@@ -9,3 +9,11 @@ just a couple of scripts mainly for me:
 
 w2v.py
 - simple w2c trained against my news (Idnes.cz) corpus
+
+ArticleComTopicsDL.py
+- downloads:
+-- articles
+-- comments
+-- authors
+
+from idnes.cz
