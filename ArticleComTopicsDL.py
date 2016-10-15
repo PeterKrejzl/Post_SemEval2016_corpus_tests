@@ -101,10 +101,6 @@ def process_article(url):
 
 
 
-
-
-
-
     return keywords, ttt, main_text, discussion_url
 
 
@@ -138,11 +134,107 @@ def get_comments (url, get_users = True):
     return zip(users, comments)
 
 
+def get_comments_ext (url):
+    print(url)
+    url_by_time = url + '&razeni=time'
+    print(url_by_time)
+
+    comments = []
+    users = []
+
+    go = True
+    page_num = 1
+
+
+    while go:
+        print('PAGE = %s' % page_num)
+
+        url_to_call = url_by_time + '&strana=' + str(page_num)
+
+
+        r = urllib.urlopen(url_to_call).read()
+        soup = BeautifulSoup(r, "html.parser")
+
+        for div in soup.find_all("div"):
+            cls = div.get("class")
+            if cls == ['contribution']:
+                h4s = div.find_all("h4")
+
+                for h4 in h4s:
+                    links = h4.find_all("a")
+                    for link in links:
+                        user_name = re.sub(r'\d+', '', link.getText())
+                        users.append(user_name)
+
+                coms = div.find_all("div")
+                for com in coms:
+                    coms2 = com.find_all("p")
+                    sentences = ''
+                    for com2 in coms2:
+                        sentences += ' ' + com2.getText().strip()
+                    if len(sentences) > 0:
+                        comments.append(sentences.strip())
+
+
+        #check ending
+
+        for span in soup.find_all('span'):
+            spn = span.get('class')
+            if spn == ['vh']:
+                #print('FINAL PAGE')
+                if page_num > 1:
+                    go = False
+
+        exist_next = False
+        for td in soup.find_all('td'):
+            td_n = td.get('class')
+            if td_n == ['tac']:
+                exist_next = True
+        if exist_next == False:
+            go = False
+
+
+
+
+        page_num += 1
+
+    return zip(users, comments)
+
+
+
+'''
+ <td class="tac">
+
+                      <b><span>1</span></b>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=2'><span>2</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=3'><span>3</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=4'><span>4</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=5'><span>5</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=6'><span>6</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=7'><span>7</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=8'><span>8</span></a>
+
+                      <a href='http://zpravy.idnes.cz/diskuse.aspx?iddiskuse=A161014_154238_domaci_san&razeni=time&strana=9'><span>9</span></a>
+                  &nbsp;&nbsp;...
+      </td>
+
+'''
+
+
 
 
 
 art_file = codecs.open('articles.txt', 'w', 'utf-8')
 com_file = codecs.open('comments.txt', 'w', 'utf-8')
+com_ext_file = codecs.open('comments_extended.txt', 'w', 'utf-8')
+csv_file = codecs.open('annotate_top.csv', 'w', 'utf-8')
 
 
 
@@ -155,6 +247,8 @@ for url in articles:
     keywords, title, article_text, discussion_url = process_article(url)
     comments = get_comments(discussion_url)
 
+    comments2 = get_comments_ext(discussion_url)
+
 
 
 
@@ -164,8 +258,23 @@ for url in articles:
 
     comment_id = 1
     for comment in comments:
-        com_file.write(str(comment_id) + ' |||||| ' + str(article_id) + ' ||||| '+ comment[0] + ' ||||| ' + comment[1] + '\n')
+        com_file.write(str(comment_id) + ' |||||| ' + str(article_id) + ' ||||| ' + comment[0] + ' ||||| ' + comment[1] + '\n')
+
+        csv_file.write(str(article_id) + '|||||' + str(comment_id) + '|||||' + comment[1] + '|||||')
+        for kw in keywords.split(','):
+            csv_file.write(kw + '|||||')
+        csv_file.write('\n')
+
+
         comment_id += 1
+
+    #extended
+    comment_ext_id = 1
+    for comment in comments2:
+        com_ext_file.write(str(comment_ext_id) + ' ||||| ' + str(article_id) + '|||||' + comment[0] + ' ||||| ' + comment[1] + '\n')
+
+
+        comment_ext_id += 1
 
 
     article_id += 1
@@ -173,11 +282,12 @@ for url in articles:
 
 
     if article_id > 0:
-        break
-        #pass
+        #break
+        pass
 
 art_file.close()
 com_file.close()
+com_ext_file.close()
 
 
 
